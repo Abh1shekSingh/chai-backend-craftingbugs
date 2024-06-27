@@ -64,7 +64,7 @@ userSchema.methods.isPasswordCorrect = async function(password) {
 
 
 //generating the access token
-userSchema.methods.generateAccessToken = async function() {
+userSchema.methods.generateAccessToken = function() {
     return jwt.sign(
         {
             _id: this._id, // came from mongodb
@@ -81,17 +81,14 @@ userSchema.methods.generateAccessToken = async function() {
 
 
 //generating the refresh token
-userSchema.methods.generateRefreshToken = async function() {
+userSchema.methods.generateRefreshToken = function() {
     return jwt.sign(
         {
             _id: this._id, // came from mongodb
-            email: this.email,
-            username: this.username,
-            fullname: this.fullname,
         },
-        process.env.ACCESS_REFRESH_SECRET,
+        process.env.REFRESH_TOKEN_SECRET,
         {
-            expiresIn: process.env.ACCESS_REFRESH_EXPIRY
+            expiresIn: process.env.REFRESH_TOKEN_EXPIRY
         }
     )
 }
