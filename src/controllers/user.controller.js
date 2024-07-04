@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import { uploadToCloudinary } from "../utils/cloudinary.services.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 // This is helper function to generate access and refresh token together
 const generateAccessAndRefreshToken = async(userId) => {
@@ -155,7 +156,7 @@ const logoutUser = asyncHandler( async (req, res) => {
     // Now think we dont have access to the user here, then how can I delete the refresh token from the database
     // So we have to create the middleware for this purpose
 
-    await User.findByIdAndUpdate(req.user._id, {$set: {refreshToken: undefined}}, {new :true})
+    await User.findByIdAndUpdate(req.user._id, {$unset: {refreshToken: 1}}, {new :true})
     
     const options = {
         httpOnly:true, 

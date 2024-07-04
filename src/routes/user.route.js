@@ -23,7 +23,7 @@ router.route("/change-password").post(verifyJWT,changePassword)
 router.route("/current-user").get(verifyJWT,getCurrentUser);
 router.route("/update-user").patch(verifyJWT,updateUserDetails);
 router.route("/avatar").patch(verifyJWT,upload.single("avatar"),updateUserAvatar);
-router.route("/cover-image").patch(verifyJWT,upload.single("/coverImage"),updateUserCoverImage);
+router.route("/cover-image").patch(verifyJWT,upload.single("coverImage"),updateUserCoverImage);
 router.route("/c/:username").get(verifyJWT,getUserProfileDetails);
 router.route("/watch-history").get(verifyJWT,getWatchHistory);
 
