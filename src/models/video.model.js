@@ -19,7 +19,7 @@ const videoSchema = new Schema({
     },
     duration:{
         type:Number, // Cloudnary se ayega
-        required:true
+        default:0
     },
     views: {
         type:Number,

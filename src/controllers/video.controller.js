@@ -4,12 +4,13 @@ import {User} from "../models/user.model.js"
 import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
-import {uploadOnCloudinary} from "../utils/cloudinary.js"
+import {uploadToCloudinary} from "../utils/cloudinary.services.js"
 
 
 const getAllVideos = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
     //TODO: get all videos based on query, sort, pagination
+
 
 })
 
@@ -31,8 +32,8 @@ const publishAVideo = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Thumbnail is Required");
     }
 
-    const video = await uploadOnCloudinary(videoFileLocalPath);
-    const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
+    const video = await uploadToCloudinary(videoFileLocalPath);
+    const thumbnail = await uploadToCloudinary(thumbnailLocalPath);
 
     if(!video) {
         throw new ApiError(400, "Error Uploading Video");
@@ -45,11 +46,12 @@ const publishAVideo = asyncHandler(async (req, res) => {
     const newVideo = await Video.create({
         videoFile: video?.url,
         thumbnail: thumbnail?.url,
-        title,
-        description,
-        duration:video?.duration,
+        title:title,
+        description:description,
+        duration:video.duration,
         isPublished:true,
-        owner: req.user?._id
+        owner: req.user?._id,
+        views:0
     })
 
     return res
@@ -83,9 +85,10 @@ const updateVideo = asyncHandler(async (req, res) => {
 
     const { title, description } = req.body;
 
-    const thumbnailLocalPath = req.file?.path;
-    const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
-
+    const thumbnailLocalPath = req.file?.path
+    console.log(thumbnailLocalPath)
+    const thumbnail = await uploadToCloudinary(thumbnailLocalPath);
+    
     if(!thumbnail) {
         throw new ApiError(400,"Error Uploading Thumbnail");
     }
@@ -95,7 +98,7 @@ const updateVideo = asyncHandler(async (req, res) => {
             $set: {
                 title,
                 description,
-                thumbnail
+                thumbnail:thumbnail?.url
             }
         },
         {
@@ -137,21 +140,19 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
         throw new ApiError(404, "No Video Exisit");
     }
 
-    const updatedVideo = await Video.findByIdAndUpdate(videoId, {
-        $set: {
-            isPublished : {
-                $not:"$isPublished";
-            }
-        }
-    })
+    const videoExisted = await Video.findById(videoId);
 
-    if(!updateVideo) {
-        throw new ApiError(400, "Error Toggling the Published Status");
+    if(!videoExisted?.owner == req.body?._id) {
+        throw new ApiError(401, "Action Not Allowed");
     }
 
+    videoExisted.isPublished = !videoExisted.isPublished;
+    await videoExisted.save({validateBeforeSave:false});
+
+    
     return res
     .status(200)
-    .json(new ApiResponse(200, updatedVideo, "Succesfully Toggle the Published Status"));
+    .json(new ApiResponse(200, videoExisted.isPublished, "Succesfully Toggle the Published Status"));
 })
 
 export {
